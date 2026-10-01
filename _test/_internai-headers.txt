@@ -1,0 +1,17 @@
+HTTP/1.1 200 Connection established
+
+HTTP/1.1 404 Not Found
+content-type: application/json; charset=utf-8
+traceparent: 00-6253a604bd72b317a0c2ed705bfde2e3-ad7cb266e163422a-01
+x-request-id: req_da4454f1-f4de-46bd-bc30-ea787dcb63a2
+date: Wed, 30 Sep 2026 08:57:15 GMT
+content-length: 246
+req-cost-time: 8
+req-arrive-time: 1790758634996
+resp-start-time: 1790758635004
+x-envoy-upstream-service-time: 8
+access-control-allow-origin: null
+access-control-allow-credentials: true
+access-control-expose-headers: *
+server: istio-envoy
+

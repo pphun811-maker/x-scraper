@@ -1,0 +1,1 @@
+{"model":"deepseek-v4-flash-vision","stream":false,"temperature":0.2,"max_tokens":100,"messages":[{"role":"user","content":"回复两个字母：OK"}]}

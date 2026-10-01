@@ -1,0 +1,3 @@
+﻿self: pid=19384 name=node.exe parent=52576
+mid:   pid=52576 name=cmd.exe parent=39484
+root:  pid=39484 name=explorer.exe

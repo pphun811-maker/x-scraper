@@ -1,0 +1,17 @@
+{
+  "mode": "shadow",
+  "liveProfile": "Profile 1",
+  "debugPort": 9222,
+  "timeoutPreset": "standard",
+  "timeouts": {
+    "evalMs": 30000,
+    "wheelMs": 8000,
+    "navigateMs": 45000,
+    "renderWaitMs": 90000,
+    "responsiveMs": 90000,
+    "evalTries": 4,
+    "stuckAfter": 3,
+    "maxRecoveries": 2,
+    "launchWarnMs": 20000
+  }
+}

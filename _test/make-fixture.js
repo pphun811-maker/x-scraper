@@ -1,0 +1,85 @@
+'use strict';
+/** 生成一个结构模仿 X 的假时间线页面，用来在不碰真 X 的情况下做端到端自测。 */
+const fs = require('fs');
+const path = require('path');
+
+const TOTAL = 260;
+const OUT = path.join(__dirname, 'fake-timeline.html');
+
+const html = `<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><title>Fake X timeline</title>
+<style>
+ body{margin:0;font-family:system-ui,sans-serif;background:#000;color:#e7e9ea}
+ header{position:sticky;top:0;background:#111;padding:10px;border-bottom:1px solid #333;z-index:5}
+ article{border-bottom:1px solid #2f3336;padding:14px 18px;min-height:520px}
+ [data-testid="User-Name"]{font-weight:700;margin-bottom:6px}
+ [data-testid="tweetText"]{font-size:17px;line-height:1.5;white-space:pre-wrap}
+ [data-testid="tweetPhoto"] img{max-width:420px;border-radius:12px;margin-top:10px}
+ .metrics{margin-top:14px;color:#71767b;display:flex;gap:22px;font-size:13px}
+ .quote{border:1px solid #2f3336;border-radius:12px;padding:10px;margin-top:10px}
+ #done{display:none;padding:30px;text-align:center;color:#71767b}
+</style></head>
+<body>
+<header>Fake X timeline — 自测用（共 ${TOTAL} 条）</header>
+<main id="feed"></main>
+<div id="done">到底了</div>
+<script>
+const TOTAL = ${TOTAL}, BATCH = 20;
+let rendered = 0;
+const feed = document.getElementById('feed');
+
+function makeTweet(i){
+  const art = document.createElement('article');
+  art.setAttribute('data-testid','tweet');
+  // 注意：X 的推文 id 是 19 位数字，超过 JS 浮点精度，必须用字符串拼（真页面里也是从 href 读字符串）
+  const id = '170000000000' + String(1000000 + i);
+  const kind = (i % 9 === 4) ? 'retweet' : (i % 7 === 3 ? 'reply' : 'original');
+  let head = '';
+  if (kind === 'retweet') head = '<div data-testid="socialContext">George Russell reposted</div>';
+  const name = 'Person ' + (i % 40);
+  const handle = 'person' + (i % 40);
+  let reply = '';
+  if (kind === 'reply') reply = '<div>Replying to <a href="/someone">@someone</a></div>';
+  // 故意在正文里塞入危险词，验证"停止信号"不会误判推文内容
+  const dangerText = (i === 12) ? 'the rate limit exceeded message is annoying' : '';
+  const bodyText = 'Tweet body #' + i + ' ' + dangerText + (i % 11 === 5 ? '\\n' + 'multi line content with emoji 🏎️ and <angle> & ampersand' : '');
+  let media = '';
+  if (i % 5 === 0) media = '<div data-testid="tweetPhoto"><img src="https://pbs.twimg.com/media/FAKE' + i + '?format=jpg&name=small" alt="pic ' + i + '"></div>';
+  let quote = '';
+  if (i % 13 === 6) quote = '<div role="link" tabindex="0"><div data-testid="User-Name">Quoted Person <span>@quoted' + i + '</span> <a href="/quoted' + i + '/status/1800000000000000' + i + '"><time datetime="2026-01-02T03:04:05.000Z">Jan 2</time></a></div><div data-testid="tweetText">quoted body ' + i + '</div></div>';
+  let showMore = '';
+  if (i % 17 === 8) showMore = '<a data-testid="tweet-text-show-more-link" href="#" onclick="event.preventDefault(); this.remove(); return false;">Show more</a>';
+  art.innerHTML = head +
+    '<div data-testid="User-Name"><a href="/' + handle + '"><span>' + name + '</span></a> <a href="/' + handle + '"><span>@' + handle + '</span></a>' +
+    ' <span data-testid="icon-verified">✔</span>' +
+    ' &middot; <a href="/' + handle + '/status/' + id + '"><time datetime="2026-09-2' + (i % 9) + 'T10:00:0' + (i % 9) + '.000Z">Sep 2' + (i % 9) + '</time></a></div>' +
+    reply +
+    '<div data-testid="tweetText" lang="en">' + bodyText + '</div>' + showMore + media + quote +
+    '<div class="metrics">' +
+      '<div data-testid="reply" aria-label="' + (i % 30) + ' replies">' + (i % 30) + '</div>' +
+      '<div data-testid="retweet" aria-label="' + (i % 12) + ' reposts">' + (i % 12) + '</div>' +
+      '<div data-testid="like" aria-label="1.' + (i % 9) + 'K likes">1.' + (i % 9) + 'K</div>' +
+      '<a href="/' + handle + '/status/' + id + '/analytics" aria-label="' + (i * 137) + ' views">' + (i * 137) + '</a>' +
+    '</div>';
+  return art;
+}
+
+function renderBatch(){
+  const frag = document.createDocumentFragment();
+  const end = Math.min(rendered + BATCH, TOTAL);
+  for (let i = rendered; i < end; i++) frag.appendChild(makeTweet(i));
+  rendered = end;
+  feed.appendChild(frag);
+  if (rendered >= TOTAL) document.getElementById('done').style.display = 'block';
+}
+renderBatch();
+
+window.addEventListener('scroll', () => {
+  const se = document.scrollingElement;
+  if (rendered < TOTAL && se.scrollTop + window.innerHeight > se.scrollHeight - 1500) renderBatch();
+}, {passive:true});
+</script>
+</body></html>`;
+
+fs.writeFileSync(OUT, html, 'utf8');
+console.log('wrote', OUT, html.length, 'bytes; tweets =', TOTAL);

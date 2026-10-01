@@ -1,0 +1,42 @@
+# ── 绝不入库：Chrome 配置副本（含真实登录 cookie / auth_token） ──
+chrome-shadow/
+_backup-profile1/
+_test/profile/
+_test/*profile*/
+**/Cookies
+**/Local State
+**/Login Data
+
+# ── 抓取产出与日志（体积大 + 含他人账号数据） ──
+data/
+logs/
+
+# ── 测试截图与产物 ──
+_test/shots/
+_test/out/
+
+# ── 含个人身份信息（真实邮箱 / X 账号句柄） ──
+_test/profiles.json
+_test/logins.json
+_test/dump-shadow-cookies.js
+**/x-session.json
+**/*session*.json
+
+# ── 本地交接文档与归档（含账号邮箱等身份信息，不外传） ──
+HANDOFF.md
+HISTORY.md
+_archive/
+README.md
+
+# ── Chrome 配置备份目录 ──
+_test/_v5-backup-*/
+
+# ── 运行状态采集日志（含登录账号名与本机路径） ──
+_test/status-capture-*.jsonl
+_test/_parent-check.txt
+
+# ── 运行时产物 ──
+node_modules/
+*.log
+.DS_Store
+Thumbs.db

@@ -1,0 +1,19 @@
+{
+  "manifest_version": 3,
+  "name": "X 登录态同步（本机工具）",
+  "version": "1.0.0",
+  "description": "读取 x.com 的登录 cookie（由 Chrome 自己解密），通过 127.0.0.1 交给本机的 X 抓取工具。只发本机，不外传。",
+  "permissions": ["cookies"],
+  "host_permissions": [
+    "*://*.x.com/*",
+    "*://*.twitter.com/*",
+    "http://127.0.0.1:8787/*"
+  ],
+  "background": {
+    "service_worker": "background.js"
+  },
+  "action": {
+    "default_popup": "popup.html",
+    "default_title": "同步 X 登录态到本机工具"
+  }
+}

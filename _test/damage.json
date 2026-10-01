@@ -1,0 +1,53 @@
+[
+  {
+    "dir": "Default",
+    "exists": true,
+    "bytes": 40960,
+    "mtime": "2026-07-31T20:51:35.172Z",
+    "rawAuthToken": 0,
+    "rawCt0": 0,
+    "rawV20": 58,
+    "rawXcom": 0,
+    "rows": 58,
+    "xRows": 0,
+    "pageSize": 4096,
+    "pageCount": 10,
+    "freelist": 0,
+    "journalMode": "delete",
+    "journalBytes": null
+  },
+  {
+    "dir": "Profile 1",
+    "exists": true,
+    "bytes": 1769472,
+    "mtime": "2026-09-29T10:30:29.888Z",
+    "rawAuthToken": 0,
+    "rawCt0": 0,
+    "rawV20": 0,
+    "rawXcom": 10,
+    "rows": 60,
+    "xRows": 7,
+    "pageSize": 4096,
+    "pageCount": 430,
+    "freelist": 420,
+    "journalMode": "delete",
+    "journalBytes": 0
+  },
+  {
+    "dir": "Profile 2",
+    "exists": true,
+    "bytes": 884736,
+    "mtime": "2026-09-29T10:28:23.211Z",
+    "rawAuthToken": 0,
+    "rawCt0": 0,
+    "rawV20": 1777,
+    "rawXcom": 10,
+    "rows": 1763,
+    "xRows": 49,
+    "pageSize": 4096,
+    "pageCount": 213,
+    "freelist": 4,
+    "journalMode": "delete",
+    "journalBytes": 0
+  }
+]

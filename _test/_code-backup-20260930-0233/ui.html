@@ -1,0 +1,864 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>X 抓取控制面板</title>
+<style>
+:root{
+  --bg:#0e1116; --panel:#151a22; --panel-2:#1a2029; --panel-3:#101620;
+  --line:#252d3a; --line-2:#2f3947;
+  --fg:#e7ebf2; --muted:#95a1b4; --dim:#6b7688;
+  --accent:#4f8cff; --accent-bg:#1b2b4a; --accent-line:#2c4a80;
+  --ok:#4fb96a; --ok-bg:#152a1c; --ok-line:#2c5238;
+  --warn:#d7a33a; --warn-bg:#2b2413; --warn-line:#544527;
+  --bad:#e07a70; --bad-bg:#2c1a19; --bad-line:#573330;
+  --radius:12px;
+}
+*{box-sizing:border-box}
+html,body{margin:0;padding:0}
+body{
+  background:var(--bg); color:var(--fg);
+  font-family:"Segoe UI","Microsoft YaHei",system-ui,-apple-system,"Helvetica Neue",Arial,sans-serif;
+  font-size:14px; line-height:1.65; -webkit-font-smoothing:antialiased;
+}
+.wrap{max-width:880px; margin:0 auto; padding:22px 16px 40px}
+.hd{display:flex; align-items:baseline; gap:12px; flex-wrap:wrap; margin-bottom:4px}
+.hd h1{margin:0; font-size:19px; font-weight:650; letter-spacing:.2px}
+.hd .svc{color:var(--dim); font-size:12.5px; margin-left:auto; display:inline-flex; align-items:center; gap:6px}
+.dot{width:8px; height:8px; border-radius:50%; background:var(--dim); display:inline-block}
+.dot.ok{background:var(--ok)}
+.dot.bad{background:var(--bad)}
+.lead{color:var(--dim); font-size:12.5px; margin:0 0 18px}
+.card{background:var(--panel); border:1px solid var(--line); border-radius:var(--radius); padding:16px 18px; margin:14px 0}
+.card h2{margin:0 0 12px; font-size:14.5px; font-weight:640; color:#dfe5ef;
+  display:flex; align-items:center; gap:8px}
+.card h2 .n{width:20px; height:20px; border-radius:6px; background:var(--panel-2); border:1px solid var(--line-2);
+  color:var(--muted); font-size:12px; text-align:center; line-height:19px; font-weight:600; flex:none}
+.row{display:flex; align-items:center; gap:10px; flex-wrap:wrap}
+.badge{font-size:12px; padding:3px 11px; border-radius:20px; border:1px solid var(--line-2);
+  background:var(--panel-2); color:var(--muted); white-space:nowrap}
+.badge.ok{color:#a7e0b6; border-color:var(--ok-line); background:var(--ok-bg)}
+.badge.warn{color:#e8cd93; border-color:var(--warn-line); background:var(--warn-bg)}
+.badge.bad{color:#f0b0a8; border-color:var(--bad-line); background:var(--bad-bg)}
+.badge.info{color:#adc6f2; border-color:var(--accent-line); background:var(--accent-bg)}
+.muted{color:var(--muted); font-size:12.5px}
+.hint{color:var(--dim); font-size:12px; margin:10px 0 0}
+.grid{display:grid; grid-template-columns:repeat(auto-fit,minmax(210px,1fr)); gap:12px}
+.field{display:flex; flex-direction:column; gap:6px}
+.field > span{color:var(--muted); font-size:12.5px}
+input[type=text],select{
+  width:100%; padding:8px 11px; border-radius:9px; border:1px solid var(--line-2);
+  background:var(--panel-3); color:var(--fg); font-size:13px; font-family:inherit; outline:none;
+}
+input[type=text]:focus,select:focus{border-color:var(--accent-line); box-shadow:0 0 0 3px rgba(79,140,255,.13)}
+input[type=text]:disabled,select:disabled{opacity:.5; cursor:not-allowed}
+.btn{cursor:pointer; font-family:inherit; font-size:13px; padding:8px 16px; border-radius:9px;
+  border:1px solid var(--line-2); background:var(--panel-2); color:var(--fg); white-space:nowrap}
+.btn:hover:not(:disabled){border-color:#3d495c; background:#1e2531}
+.btn:disabled{opacity:.45; cursor:not-allowed}
+.btn.primary{background:var(--accent-bg); border-color:var(--accent-line); color:#d5e4ff}
+.btn.primary:hover:not(:disabled){background:#22345a}
+.btn.danger{background:#2a1a19; border-color:#5a3330; color:#f0b0a8}
+.btn.danger:hover:not(:disabled){background:#362120}
+.btn.sm{padding:4px 10px; font-size:12px; border-radius:7px}
+.actions{margin-top:14px}
+.banner{border-radius:10px; padding:10px 13px; margin:14px 0 0; font-size:13px; border:1px solid var(--line-2);
+  background:var(--panel-2); color:var(--fg)}
+.banner.ok{border-color:var(--ok-line); background:var(--ok-bg); color:#bfe8cb}
+.banner.warn{border-color:var(--warn-line); background:var(--warn-bg); color:#ecd8a6}
+.banner.err{border-color:var(--bad-line); background:var(--bad-bg); color:#f2bdb6}
+.stats{display:grid; grid-template-columns:repeat(auto-fit,minmax(110px,1fr)); gap:10px}
+.stat{background:var(--panel-3); border:1px solid var(--line); border-radius:10px; padding:9px 12px}
+.stat b{display:block; font-size:16px; font-weight:640}
+.stat span{color:var(--dim); font-size:12px}
+.alert{border-radius:10px; padding:10px 13px; margin:12px 0 0; font-size:12.5px; border:1px solid var(--line-2);
+  background:var(--panel-2)}
+.alert.warn{border-color:var(--warn-line); background:var(--warn-bg); color:#ecd8a6}
+.alert.err{border-color:var(--bad-line); background:var(--bad-bg); color:#f2bdb6}
+.logs{margin-top:12px; height:190px; overflow:auto; background:#0b0e13; border:1px solid var(--line);
+  border-radius:10px; padding:8px 10px; font-family:Consolas,"Cascadia Mono","Courier New",monospace; font-size:12px;
+  line-height:1.75}
+.log-line{display:flex; gap:9px; color:#c3cbd8}
+.log-line .log-t{color:var(--dim); flex:none}
+.log-line .log-m{word-break:break-word; white-space:pre-wrap}
+.log-line.empty{color:var(--dim)}
+table{width:100%; border-collapse:collapse; font-size:13px}
+th,td{text-align:left; padding:8px 10px; border-bottom:1px solid var(--line)}
+th{color:var(--dim); font-weight:500; font-size:12px; white-space:nowrap}
+tr:last-child td{border-bottom:0}
+td.num{font-variant-numeric:tabular-nums}
+td.none{color:var(--dim); text-align:center; padding:22px 10px}
+td.act{text-align:right; white-space:nowrap}
+td.act .btn{margin-left:6px}
+.handle{font-weight:600}
+.foot{color:var(--dim); font-size:12px; text-align:center; padding:22px 0 6px; margin-top:18px; border-top:1px solid var(--line)}
+code{background:var(--panel-2); padding:1px 5px; border-radius:5px; font-size:12px; color:#cbd5e6}
+@media (max-width:560px){
+  .hd .svc{margin-left:0; width:100%}
+  td.act .btn{margin:3px 0 0 0; display:block; width:100%}
+}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="hd">
+    <h1>X 抓取控制面板</h1>
+    <span class="svc"><span class="dot" id="svcDot"></span><span id="svcText">连接中…</span></span>
+  </div>
+  <p class="lead">本地运行，全程只读抓取，数据保存在你自己的电脑上。</p>
+
+  <div id="banner" class="banner" hidden></div>
+
+  <section class="card">
+    <h2><span class="n">1</span>登录态</h2>
+    <div class="row">
+      <span class="badge" id="loginBadge">未同步</span>
+      <span class="muted" id="loginInfo"></span>
+      <span style="flex:1 1 auto"></span>
+      <button type="button" class="btn" id="btnFolder">打开扩展文件夹</button>
+      <button type="button" class="btn" id="btnCheck">检查登录态</button>
+    </div>
+    <p class="hint" id="modeHint"></p>
+  </section>
+
+  <section class="card" id="formCard">
+    <h2><span class="n">2</span>开始抓取</h2>
+    <div class="grid">
+      <label class="field">
+        <span>用户名或链接</span>
+        <input type="text" id="handle" value="georgerussell63" placeholder="georgerussell63 或 https://x.com/xxx" autocomplete="off" spellcheck="false">
+      </label>
+      <label class="field">
+        <span>条数上限</span>
+        <select id="maxTweets">
+          <option value="50">50 条</option>
+          <option value="100" selected>100 条</option>
+          <option value="500">500 条</option>
+          <option value="1000">1000 条</option>
+          <option value="2000">2000 条</option>
+          <option value="0">全部（不设上限）</option>
+        </select>
+      </label>
+      <label class="field">
+        <span>速度</span>
+        <select id="speed">
+          <option value="safe" selected>稳健（推荐）</option>
+          <option value="normal">标准</option>
+          <option value="fast">快速</option>
+        </select>
+      </label>
+      <label class="field">
+        <span>单次最长</span>
+        <!-- 默认=跟速度档位走；0=不限时（到底/条数上限/手动停才停） -->
+        <select id="maxMinutes">
+          <option value="" selected>跟速度档位走</option>
+          <option value="30">30 分钟</option>
+          <option value="45">45 分钟</option>
+          <option value="60">60 分钟</option>
+          <option value="120">2 小时</option>
+          <option value="240">4 小时</option>
+          <option value="0">不限（到底才停）</option>
+        </select>
+      </label>
+      <label class="field">
+        <span>图片</span>
+        <select id="images">
+          <option value="none">不下载</option>
+          <option value="medium">中等尺寸</option>
+          <option value="orig" selected>原图（推荐）</option>
+        </select>
+      </label>
+      <label class="field">
+        <span>标签页</span>
+        <select id="tabs">
+          <option value="posts">仅主贴</option>
+          <option value="with_replies" selected>含回复与转推（推荐）</option>
+        </select>
+      </label>
+      <label class="field">
+        <span>超时档位</span>
+        <!-- 下面 4 个是兜底选项：页面加载后会按 /api/status 的 timeouts.presets 动态重建，
+             以后后端加档位不用改这里。 -->
+        <select id="timeoutPreset">
+          <option value="quick">快速失败（超时短，卡住就赶紧报错）</option>
+          <option value="standard" selected>标准（推荐）</option>
+          <option value="patient">宽松（网络/机器慢时用）</option>
+          <option value="extreme">极宽松（很慢的机器，能等就等）</option>
+        </select>
+      </label>
+    </div>
+    <p class="hint" id="timeoutHint">超时数值读取中…（切换档位后，下个任务生效）</p>
+    <div class="row actions">
+      <button type="button" class="btn primary" id="btnStart">开始抓取</button>
+      <button type="button" class="btn danger" id="btnStop" disabled>停止</button>
+      <span class="muted" id="formHint"></span>
+    </div>
+    <p class="hint">粘贴完整链接也可以，会自动识别用户名。条数上限选「全部」时不设上限，直到抓完或触发风控保护。</p>
+  </section>
+
+  <section class="card">
+    <h2><span class="n">3</span>进度</h2>
+    <div class="stats">
+      <div class="stat"><b id="pPhase">空闲</b><span>当前阶段</span></div>
+      <div class="stat"><b id="pTweets">0</b><span>已抓条数</span></div>
+      <div class="stat"><b id="pScrolls">0</b><span>滚动次数</span></div>
+      <div class="stat"><b id="pElapsed">0 秒</b><span>已用时长</span></div>
+      <div class="stat"><b id="pTab">—</b><span>当前标签页</span></div>
+    </div>
+    <div class="alert warn" id="rescueHint" hidden></div>
+    <div class="alert" id="alertBox" hidden></div>
+    <div class="logs" id="logs"></div>
+  </section>
+
+  <section class="card">
+    <h2><span class="n">4</span>已抓账号</h2>
+    <table>
+      <thead>
+        <tr><th>用户名</th><th>条数</th><th>图片</th><th>更新时间</th><th style="text-align:right">操作</th></tr>
+      </thead>
+      <tbody id="accBody">
+        <tr><td class="none" colspan="5">正在读取…</td></tr>
+      </tbody>
+    </table>
+  </section>
+
+  <div class="foot">全程只读（不点赞、不转发、不关注），拟人速度，遇到限流或验证会立即停止。</div>
+</div>
+
+<script>
+(function () {
+  'use strict';
+
+  // 页面由本地服务托管时用同源相对路径；若被直接双击用 file:// 打开，则回退到固定地址。
+  var API_BASE = (location.protocol === 'file:' || !location.port) ? 'http://127.0.0.1:8787' : '';
+  var POLL_MS = 1500;
+
+  var PHASES = {
+    idle: '空闲',
+    preparing: '准备登录态',
+    launching: '启动浏览器',
+    navigating: '打开主页',
+    scrolling: '滚动抓取',
+    downloading: '下载图片',
+    reporting: '生成报告',
+    stopped: '已停止',
+    error: '出错'
+  };
+
+  var $ = function (id) { return document.getElementById(id); };
+  var bannerEl = $('banner');
+  var svcDot = $('svcDot');
+  var svcText = $('svcText');
+  var loginBadge = $('loginBadge');
+  var loginInfo = $('loginInfo');
+  var modeHint = $('modeHint');
+  var btnFolder = $('btnFolder');
+  var btnCheck = $('btnCheck');
+  var formCard = $('formCard');
+  var handleEl = $('handle');
+  var maxEl = $('maxTweets');
+  var speedEl = $('speed');
+  var maxMinEl = $('maxMinutes');
+  var imagesEl = $('images');
+  var tabsEl = $('tabs');
+  var timeoutEl = $('timeoutPreset');
+  var timeoutHintEl = $('timeoutHint');
+  var btnStart = $('btnStart');
+  var btnStop = $('btnStop');
+  var formHint = $('formHint');
+  var pPhase = $('pPhase');
+  var pTweets = $('pTweets');
+  var pScrolls = $('pScrolls');
+  var pElapsed = $('pElapsed');
+  var pTab = $('pTab');
+  var rescueHint = $('rescueHint');
+  var alertBox = $('alertBox');
+  var logsEl = $('logs');
+  var accBody = $('accBody');
+
+  var lastStatus = null;
+  var logsSig = '';
+  var accSig = '';
+  var timeoutSig = '';
+  var bannerTimer = null;
+  var polling = false;
+
+  function api(path) { return API_BASE + path; }
+
+  /* ---------------- 基础请求 ---------------- */
+
+  function rawRequest(path, body) {
+    var opt = { method: body === undefined ? 'GET' : 'POST', cache: 'no-store' };
+    if (body !== undefined) {
+      opt.headers = { 'Content-Type': 'application/json' };
+      opt.body = JSON.stringify(body);
+    }
+    return fetch(api(path), opt).then(function (res) {
+      return res.text().then(function (text) {
+        var data = null;
+        if (text) {
+          try { data = JSON.parse(text); } catch (e) { data = null; }
+        }
+        if (!res.ok) {
+          var msg = (data && (data.message || data.error)) || ('请求失败：HTTP ' + res.status);
+          throw new Error(msg);
+        }
+        if (!data) throw new Error('本地服务返回了无法识别的内容。');
+        return data;
+      });
+    });
+  }
+
+  function request(path, body) {
+    return rawRequest(path, body).catch(function (err) {
+      if (err && err.name === 'TypeError') {
+        throw new Error('无法连接本地服务（' + (API_BASE || location.origin) + '），请确认抓取程序已启动。');
+      }
+      throw err;
+    });
+  }
+
+  function errText(err) {
+    if (!err) return '未知错误';
+    return String(err.message || err);
+  }
+
+  /* ---------------- 提示条（不使用弹窗） ---------------- */
+
+  function showBanner(kind, text) {
+    if (!bannerEl) return;
+    bannerEl.hidden = false;
+    bannerEl.className = 'banner ' + (kind || 'info');
+    bannerEl.textContent = text;
+    if (bannerTimer) { clearTimeout(bannerTimer); bannerTimer = null; }
+    if (kind !== 'err' && kind !== 'warn') {
+      bannerTimer = setTimeout(function () { bannerEl.hidden = true; }, 8000);
+    }
+  }
+
+  /* ---------------- 工具 ---------------- */
+
+  function parseHandle(input) {
+    var s = String(input || '').trim();
+    if (!s) return '';
+    var m = s.match(/(?:x\.com|twitter\.com)\/(?:#!\/)?@?([A-Za-z0-9_]{1,15})/i);
+    if (m) return m[1];
+    m = s.replace(/^@+/, '').match(/^([A-Za-z0-9_]{1,15})/);
+    return m ? m[1] : '';
+  }
+
+  function fmtDur(sec) {
+    var s = Math.max(0, Math.floor(Number(sec) || 0));
+    if (s < 60) return s + ' 秒';
+    var m = Math.floor(s / 60);
+    if (m < 60) return m + ' 分 ' + (s % 60) + ' 秒';
+    return Math.floor(m / 60) + ' 小时 ' + (m % 60) + ' 分';
+  }
+
+  function fmtCount(n) {
+    var v = Number(n);
+    return isFinite(v) ? v.toLocaleString('zh-CN') : '0';
+  }
+
+  function fmtStamp(s) {
+    var t = String(s || '');
+    var m = t.match(/^(\d{4}-\d{2}-\d{2})[T ](\d{2}:\d{2})/);
+    return m ? m[1] + ' ' + m[2] : (t || '—');
+  }
+
+  function stopReasonText(r) {
+    var s = String(r || '');
+    var map = {
+      done: '已抓完（到达条数上限或列表到底）',
+      finished: '已完成',
+      completed: '已完成',
+      user: '你手动停止了',
+      'user-stopped': '你手动停止了',
+      limit: '到达限流保护，已自动停止'
+    };
+    return map[s] || s;
+  }
+
+  /* ---------------- 按钮忙碌态 ---------------- */
+
+  function busyRun(btn, busyText, fn) {
+    if (!btn) return Promise.resolve();
+    if (btn.dataset.busy === '1') return Promise.resolve();
+    var old = btn.textContent;
+    btn.dataset.busy = '1';
+    btn.disabled = true;
+    btn.textContent = busyText;
+    return Promise.resolve()
+      .then(fn)
+      .catch(function (err) { showBanner('err', errText(err)); })
+      .then(function () {
+        btn.dataset.busy = '0';
+        btn.textContent = old;
+        applyRunning(lastStatus ? !!lastStatus.running : false);
+        return pollOnce();
+      });
+  }
+
+  /* ---------------- 渲染 ---------------- */
+
+  function renderService(ok, detail) {
+    if (svcDot) svcDot.className = 'dot ' + (ok ? 'ok' : 'bad');
+    if (svcText) svcText.textContent = ok ? '本地服务已连接' : '本地服务未连接';
+    if (!ok && detail) showBanner('err', detail);
+  }
+
+  function renderProfile(p, session) {
+    p = p || {};
+    session = session || null;
+    var synced = !!(session && session.syncedAt);
+    var loggedIn = !!(session && session.loggedIn) || p.loginState === 'logged_in';
+    var cls = '';
+    var text = '未同步';
+    if (loggedIn) { cls = 'ok'; text = '已就绪'; }
+    else if (synced) { cls = 'bad'; text = '已同步但未登录'; }
+    if (loginBadge) {
+      loginBadge.className = 'badge ' + cls;
+      loginBadge.textContent = text;
+    }
+    var info = [];
+    if (synced) {
+      info.push('同步于 ' + String(session.syncedAt).slice(5, 16).replace('T', ' '));
+      info.push(session.cookieCount + ' 条 cookie');
+      if (session.handle) info.push('账号 @' + session.handle);
+    }
+    if (p.chromeRunning) info.push('你的 Chrome 正在运行');
+    if (loginInfo) loginInfo.textContent = info.join(' · ');
+
+    if (modeHint) {
+      modeHint.textContent = loggedIn
+        ? '登录态已就绪：抓取在独立副本浏览器里进行，你日常的 Chrome 全程正常使用，cookie 一个都不会被改动。'
+        : '第一次使用要装一个很小的本机扩展（只读 x.com 的登录 cookie，只发到 127.0.0.1，不外传、不读别的网站）：\n'
+          + '① 点【打开扩展文件夹】；② Chrome 地址栏打开 chrome://extensions → 打开右上角「开发者模式」'
+          + '→ 点「加载已解压的扩展程序」→ 选中刚打开的那个文件夹；'
+          + '③ 点扩展图标（或装好会自动同步），看到"成功"就回来点【检查登录态】。';
+    }
+    if (formHint) {
+      formHint.textContent = loggedIn ? '一切就绪，可以直接开始抓取。' : '请先完成第 1 步的登录态同步。';
+    }
+  }
+
+  function applyRunning(running) {
+    var controls = [handleEl, maxEl, speedEl, maxMinEl, imagesEl, tabsEl];
+    for (var i = 0; i < controls.length; i++) {
+      if (controls[i]) controls[i].disabled = !!running;
+    }
+    if (btnStart && btnStart.dataset.busy !== '1') btnStart.disabled = !!running;
+    if (btnStop && btnStop.dataset.busy !== '1') btnStop.disabled = !running;
+    if (btnFolder) btnFolder.disabled = !!running;
+    if (btnCheck) btnCheck.disabled = !!running;
+  }
+
+  function renderProgress(st) {
+    if (pPhase) pPhase.textContent = PHASES[st.phase] || st.phase || '—';
+    if (pTweets) pTweets.textContent = fmtCount(st.tweets || 0);
+    if (pScrolls) pScrolls.textContent = fmtCount(st.scrolls || 0);
+    if (pElapsed) pElapsed.textContent = fmtDur(st.elapsedSec || 0);
+    var tab = st.tab === 'with_replies' ? '含回复' : st.tab === 'posts' ? '仅主贴' : null;
+    if (pTab) pTab.textContent = tab || '—';
+  }
+
+  /* ---------------- 超时档位 ---------------- */
+
+  /** 毫秒 → 整秒文字；拿不到数值时返回 null（旧后端没有这些字段） */
+  function secText(ms) {
+    var v = Number(ms);
+    if (!isFinite(v) || v <= 0) return null;
+    return Math.round(v / 1000) + ' 秒';
+  }
+
+  /** 把后端 timeouts.effective 拼成一行人话；任何字段缺失都只是少一段，不会报错 */
+  function timeoutHintText(eff) {
+    eff = eff || {};
+    var parts = [];
+    var evalS = secText(eff.evalMs);
+    var wheelS = secText(eff.wheelMs);
+    var renderS = secText(eff.renderWaitMs);
+    if (evalS) parts.push('读页面 ' + evalS);
+    if (wheelS) parts.push('滚轮 ' + wheelS);
+    if (renderS) parts.push('等渲染 ' + renderS);
+    var stuck = Number(eff.stuckAfter);
+    if (isFinite(stuck) && stuck > 0) parts.push('连续 ' + stuck + ' 次无响应就自动重载页面');
+    var rec = Number(eff.maxRecoveries);
+    if (isFinite(rec) && rec > 0) parts.push('一次任务最多自救 ' + rec + ' 次');
+    return parts.length ? parts.join('｜') : '超时数值由后端 config.json 决定；切换档位后下个任务生效。';
+  }
+
+  function hasOption(sel, value) {
+    if (!sel || !value) return false;
+    for (var i = 0; i < sel.options.length; i++) {
+      if (sel.options[i].value === value) return true;
+    }
+    return false;
+  }
+
+  function renderTimeouts(t) {
+    if (!timeoutEl) return;
+    t = t || {};
+    var presets = t.presets || {};
+    var keys = Object.keys(presets);
+    var current = t.preset || '';
+    var custom = t.custom === true;
+
+    var sig = keys.join(',') + '|' + current + '|' + (custom ? '1' : '0');
+    if (sig !== timeoutSig) {
+      timeoutSig = sig;
+      if (keys.length) {
+        // 后端为准，动态重建选项（以后加档位不用改 HTML）
+        timeoutEl.textContent = '';
+        for (var i = 0; i < keys.length; i++) {
+          var k = keys[i];
+          var o = document.createElement('option');
+          o.value = k;
+          o.textContent = (presets[k] && presets[k].label) || k;
+          timeoutEl.appendChild(o);
+        }
+        if (custom) {
+          var oc = document.createElement('option');
+          oc.value = '__custom';
+          oc.textContent = '自定义（config.json 手改生效）';
+          timeoutEl.appendChild(oc);
+          timeoutEl.value = '__custom';
+        } else if (hasOption(timeoutEl, current)) {
+          timeoutEl.value = current;
+        }
+        if (!timeoutEl.value && timeoutEl.options.length) timeoutEl.selectedIndex = 0;
+      } else if (hasOption(timeoutEl, current)) {
+        // 旧后端 / 旧面板进程：没有 timeouts.presets，就沿用 HTML 里的静态兜底选项
+        timeoutEl.value = current;
+      }
+    }
+    if (timeoutHintEl) timeoutHintEl.textContent = timeoutHintText(t.effective);
+  }
+
+  /* ---------------- 自救提示 ---------------- */
+
+  function renderRescue(st) {
+    if (!rescueHint) return;
+    st = st || {};
+    // 容错：旧后端没有这些字段时一律当 0/false
+    var nest = st.recovery || {};
+    var stuck = st.pageStuck === true || nest.pageStuck === true;
+    var rec = Number(st.recoveries != null ? st.recoveries : nest.recoveries);
+    if (!isFinite(rec) || rec < 0) rec = 0;
+    var fails = Number(st.consecutiveFailures != null ? st.consecutiveFailures : nest.consecutiveFailures);
+    if (!isFinite(fails) || fails < 0) fails = 0;
+
+    if (!stuck && rec <= 0) {
+      rescueHint.hidden = true;
+      rescueHint.textContent = '';
+      return;
+    }
+    var text;
+    if (stuck) {
+      text = '页面无响应，正在自救' + (rec > 0 ? '（已重载/重启浏览器 ' + rec + ' 次）' : '') + '…';
+    } else {
+      text = '页面刚才无响应，已自救 ' + rec + ' 次（重载页面 / 必要时重启浏览器），已恢复…';
+    }
+    if (fails > 0) text += '　连续 ' + fails + ' 轮没读到页面。';
+    var ago = secText(st.lastEvalOkAgoMs != null ? st.lastEvalOkAgoMs : nest.lastEvalOkAgoMs);
+    if (ago && !stuck) text += '距上次成功读页面 ' + ago + '。';
+    rescueHint.hidden = false;
+    rescueHint.textContent = text;
+  }
+
+  function renderAlerts(st) {
+    if (!alertBox) return;
+    var parts = [];
+    if (st.error) parts.push({ cls: 'err', text: '出错：' + st.error });
+    if (st.stopReason) parts.push({ cls: 'warn', text: '停止原因：' + stopReasonText(st.stopReason) });
+    if (!parts.length) {
+      alertBox.hidden = true;
+      alertBox.textContent = '';
+      alertBox.className = 'alert';
+      return;
+    }
+    alertBox.hidden = false;
+    alertBox.className = 'alert ' + parts[0].cls;
+    alertBox.textContent = parts.map(function (x) { return x.text; }).join('　|　');
+  }
+
+  function renderLogs(logs) {
+    if (!logsEl) return;
+    var arr = Array.isArray(logs) ? logs.slice(-200) : [];
+    var last = arr.length ? arr[arr.length - 1] : null;
+    var sig = arr.length + '|' + (last ? String(last.t) + String(last.msg) : '');
+    if (sig === logsSig) return;
+    var first = logsSig === '';
+    logsSig = sig;
+    var atBottom = logsEl.scrollTop + logsEl.clientHeight >= logsEl.scrollHeight - 40;
+    logsEl.textContent = '';
+    if (!arr.length) {
+      var e = document.createElement('div');
+      e.className = 'log-line empty';
+      e.textContent = '暂无日志。开始抓取后这里会实时显示进度。';
+      logsEl.appendChild(e);
+      return;
+    }
+    var frag = document.createDocumentFragment();
+    for (var i = 0; i < arr.length; i++) {
+      var line = document.createElement('div');
+      line.className = 'log-line';
+      var t = document.createElement('span');
+      t.className = 'log-t';
+      t.textContent = (arr[i] && arr[i].t) || '';
+      var m = document.createElement('span');
+      m.className = 'log-m';
+      m.textContent = (arr[i] && arr[i].msg) || '';
+      line.appendChild(t);
+      line.appendChild(m);
+      frag.appendChild(line);
+    }
+    logsEl.appendChild(frag);
+    if (atBottom || first) logsEl.scrollTop = logsEl.scrollHeight;
+  }
+
+  function renderAccounts(list) {
+    if (!accBody) return;
+    var sig = JSON.stringify(list || null);
+    if (sig === accSig) return;
+    accSig = sig;
+    accBody.textContent = '';
+    if (!list || !list.length) {
+      var tr = document.createElement('tr');
+      var td = document.createElement('td');
+      td.className = 'none';
+      td.colSpan = 5;
+      td.textContent = '还没有已抓取的账号。填好上面的表单，点【开始抓取】就会出现记录。';
+      tr.appendChild(td);
+      accBody.appendChild(tr);
+      return;
+    }
+    for (var i = 0; i < list.length; i++) {
+      var a = list[i] || {};
+      var row = document.createElement('tr');
+
+      var c1 = document.createElement('td');
+      var sp = document.createElement('span');
+      sp.className = 'handle';
+      sp.textContent = '@' + (a.handle || '未知');
+      c1.appendChild(sp);
+      row.appendChild(c1);
+
+      var c2 = document.createElement('td');
+      c2.className = 'num';
+      c2.textContent = fmtCount(a.count || 0);
+      row.appendChild(c2);
+
+      var c3 = document.createElement('td');
+      c3.className = 'num';
+      c3.textContent = fmtCount(a.images || 0);
+      row.appendChild(c3);
+
+      var c4 = document.createElement('td');
+      c4.className = 'muted';
+      c4.textContent = fmtStamp(a.updatedAt);
+      row.appendChild(c4);
+
+      var c5 = document.createElement('td');
+      c5.className = 'act';
+      var b1 = document.createElement('button');
+      b1.type = 'button';
+      b1.className = 'btn sm';
+      b1.setAttribute('data-act', 'open');
+      b1.setAttribute('data-handle', a.handle || '');
+      b1.textContent = '打开报告';
+      if (a.hasReport === false) {
+        b1.disabled = true;
+        b1.title = '还没有生成报告，先抓一次或重新生成。';
+      }
+      var b2 = document.createElement('button');
+      b2.type = 'button';
+      b2.className = 'btn sm';
+      b2.setAttribute('data-act', 'again');
+      b2.setAttribute('data-handle', a.handle || '');
+      b2.textContent = '继续抓取';
+      c5.appendChild(b1);
+      c5.appendChild(b2);
+      row.appendChild(c5);
+
+      accBody.appendChild(row);
+    }
+  }
+
+  function renderStatus(st) {
+    lastStatus = st;
+    renderService(true);
+    renderProfile(st.profile, st.session);
+    renderProgress(st);
+    renderTimeouts(st.timeouts);
+    renderRescue(st);
+    renderAlerts(st);
+    renderLogs(st.logs);
+    renderAccounts(st.accounts);
+    applyRunning(!!st.running);
+  }
+
+  /* ---------------- 轮询 ---------------- */
+
+  function pollOnce() {
+    return request('/api/status').then(function (st) {
+      var prev = lastStatus;
+      if (prev && prev.phase !== 'stopped' && st.phase === 'stopped' && Number(st.tweets) > 0) {
+        showBanner('ok', '抓取完成，点【打开报告】查看。');
+      }
+      if (prev && prev.phase !== 'error' && st.phase === 'error') {
+        showBanner('err', '抓取出错：' + (st.error || '请查看下方日志。'));
+      }
+      renderStatus(st);
+      return st;
+    }).catch(function (err) {
+      renderService(false, errText(err));
+      return null;
+    });
+  }
+
+  function poll() {
+    if (polling) return;
+    polling = true;
+    pollOnce().then(function () { polling = false; }, function () { polling = false; });
+  }
+
+  /* ---------------- 事件 ---------------- */
+
+  if (handleEl) {
+    handleEl.addEventListener('blur', function () {
+      var h = parseHandle(handleEl.value);
+      if (h) handleEl.value = h;
+    });
+    handleEl.addEventListener('keydown', function (ev) {
+      if (ev.key === 'Enter') { ev.preventDefault(); if (btnStart) btnStart.click(); }
+    });
+  }
+
+  if (btnCheck) {
+    btnCheck.addEventListener('click', function () {
+      busyRun(btnCheck, '检查中…', function () {
+        return request('/api/login/check', {}).then(function (res) {
+          if (res && res.ok === false) throw new Error(res.message || '检查登录态失败');
+          var map = { logged_in: '已登录', logged_out: '未登录', unknown: '未知' };
+          var state = map[res.loginState] || res.loginState || '未知';
+          var kind = res.loginState === 'logged_in' ? 'ok' : res.loginState === 'logged_out' ? 'warn' : 'info';
+          showBanner(kind, (res.message || ('登录状态：' + state)) + (res.account ? '（账号：' + res.account + '）' : ''));
+          return res;
+        });
+      });
+    });
+  }
+
+  if (btnFolder) {
+    btnFolder.addEventListener('click', function () {
+      busyRun(btnFolder, '打开中…', function () {
+        return request('/api/open-folder', { which: 'extension' }).then(function (res) {
+          if (res && res.ok === false) throw new Error(res.message || '打开失败');
+          showBanner('info', (res && res.message) || '已打开扩展文件夹。');
+          return res;
+        });
+      });
+    });
+  }
+
+  if (btnStart) {
+    btnStart.addEventListener('click', function () {
+      var handle = parseHandle(handleEl ? handleEl.value : '');
+      if (!handle) {
+        showBanner('warn', '请填写有效的用户名或主页链接，例如 georgerussell63 或 https://x.com/georgerussell63');
+        if (handleEl) handleEl.focus();
+        return;
+      }
+      if (handleEl) handleEl.value = handle;
+      busyRun(btnStart, '正在启动…', function () {
+        return request('/api/start', {
+          handle: handle,
+          maxTweets: Number(maxEl ? maxEl.value : 0) || 0,
+          speed: (speedEl && speedEl.value) || 'safe',
+          maxMinutes: (maxMinEl && maxMinEl.value !== '') ? Number(maxMinEl.value) : '',
+          images: (imagesEl && imagesEl.value) || 'orig',
+          tabs: (tabsEl && tabsEl.value) || 'with_replies'
+        }).then(function (res) {
+          if (res && res.ok === false) throw new Error(res.message || '启动失败');
+          showBanner('ok', '已开始抓取 @' + handle + '，进度会实时更新，请保持 Chrome 窗口打开。');
+          return res;
+        });
+      });
+    });
+  }
+
+  if (btnStop) {
+    btnStop.addEventListener('click', function () {
+      busyRun(btnStop, '正在停止…', function () {
+        return request('/api/stop', {}).then(function (res) {
+          if (res && res.ok === false) throw new Error(res.message || '停止失败');
+          showBanner('info', '已发送停止请求，正在收尾（会先生成报告）。');
+          return res;
+        });
+      });
+    });
+  }
+
+  if (timeoutEl) {
+    timeoutEl.addEventListener('change', function () {
+      var value = timeoutEl.value;
+      if (!value || value === '__custom') {
+        // 「自定义」是 config.json 里手改出来的状态，只展示，不发请求
+        return;
+      }
+      timeoutEl.disabled = true;
+      request('/api/config', { timeoutPreset: value }).then(function (res) {
+        if (res && res.ok === false) throw new Error((res && res.message) || '切换超时档位失败');
+        showBanner('ok', (res && res.message) || '超时档位已切换，下个任务生效。');
+        return res;
+      }).catch(function (err) {
+        showBanner('warn', errText(err));
+      }).then(function () {
+        timeoutEl.disabled = false;
+        // 作废缓存签名：万一这次切换被后端拒绝（或失败），下面这次刷新会强制
+        // 用后端返回的 timeouts 重建选项、把选中项和提示行拉回真实状态。
+        timeoutSig = '';
+        return pollOnce();
+      });
+    });
+  }
+
+  if (accBody) {
+    accBody.addEventListener('click', function (ev) {
+      var node = ev.target;
+      while (node && node !== accBody && !(node.getAttribute && node.getAttribute('data-act'))) node = node.parentNode;
+      if (!node || node === accBody) return;
+      var act = node.getAttribute('data-act');
+      var handle = node.getAttribute('data-handle');
+      if (!handle) return;
+      if (act === 'open') {
+        busyRun(node, '打开中…', function () {
+          return request('/api/open-report', { handle: handle }).then(function (res) {
+            if (res && res.ok === false) throw new Error(res.message || '打开报告失败');
+            showBanner('ok', '已打开 @' + handle + ' 的报告。');
+            return res;
+          });
+        });
+        return;
+      }
+      if (handleEl) {
+        handleEl.value = handle;
+        if (formCard && formCard.scrollIntoView) formCard.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        handleEl.focus();
+        showBanner('info', '已把 @' + handle + ' 填进用户名，点【开始抓取】即可继续。');
+      }
+    });
+  }
+
+  /* ---------------- 启动 ---------------- */
+
+  applyRunning(false);
+  renderLogs([]);
+  poll();
+  setInterval(poll, POLL_MS);
+})();
+</script>
+</body>
+</html>

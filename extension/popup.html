@@ -1,0 +1,28 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<title>同步 X 登录态</title>
+<style>
+  body { margin:0; padding:14px 16px; width:320px; font-family: system-ui, "Microsoft YaHei", sans-serif;
+         background:#1b1d21; color:#e7e9ea; font-size:13px; line-height:1.6; }
+  h1 { font-size:14px; margin:0 0 8px; }
+  p { margin:0 0 10px; color:#9aa0a6; }
+  button { width:100%; padding:9px 12px; border:0; border-radius:8px; background:#2f6fd0; color:#fff;
+           font-size:13px; cursor:pointer; }
+  button:disabled { opacity:.6; cursor:default; }
+  #result { margin-top:10px; white-space:pre-wrap; }
+  .ok { color:#6ee7a8; }
+  .bad { color:#ff8f8f; }
+  code { background:#26282c; padding:1px 5px; border-radius:4px; }
+</style>
+</head>
+<body>
+  <h1>同步 X 登录态</h1>
+  <p>把本浏览器里 x.com 的登录 cookie（由 Chrome 自己解密）发到本机 <code>127.0.0.1:8787</code> 的抓取工具。
+     只发本机，不会外传，也不会读取其它网站的 cookie。</p>
+  <button id="go">立即同步</button>
+  <div id="result"></div>
+  <script src="popup.js"></script>
+</body>
+</html>
